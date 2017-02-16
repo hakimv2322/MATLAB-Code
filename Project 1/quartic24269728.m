@@ -61,7 +61,7 @@ x2 = temp(1);
 x3 = temp(2);
 x4 = temp(3);
 
-rts = [x1, x2, x3, x4].';
+rts = round([x1, x2, x3, x4].', 18, 'significant');
 
 end
 
@@ -205,7 +205,7 @@ temp = quad([Qa, Qb, Qc]);
 x2 = temp(1);
 x3 = temp(2);
 
-rts = [x1, x2, x3];
+rts = round([x1, x2, x3], 24, 'significant');
 
 end
 
