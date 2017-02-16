@@ -16,11 +16,52 @@ function rts = quartic24269728(C)
 % or to the right of the starting point.
 
 format long
-%rts = double(cubic(C).');
+%rts = double(round(cubic(C), 18, 'significant').');
 % Use the above to test the local function cubic()
 
 b = double(C(1)); c = double(C(2)); d = double(C(3));
-derivRts = cubic([]);
+derivRts = cubic([4, 3*b, 2*c, d]);
+syms x;
+f = poly2sym([1, b, c, d, -1], x);
+p0 = derivRts(1);
+
+for (it = 2:3)
+    if (imag(derivRts(it)) == 0)
+        x = derivRts(it);
+        val1 = subs(f);
+        x = p0;
+        val2 = subs(f);
+        if (val2 > val1)
+            p0 = derivRts(it);
+        end
+    end
+end
+
+temp = sort(derivRts);
+if (p0 == temp(1))
+    if (p0 <= 0)
+        x1 = Newton([1, b, c, d, -1], 1.1*p0 - 0.01);
+    else
+        x1 = Newton([1, b, c, d, -1], 0.9*p0);
+    end
+else
+    if (p0 >= 0)
+        x1 = Newton([1, b, c, d, -1], 1.1*p0 + 0.01);
+    else
+        x1 = Newton([1, b, c, d, -1], 0.9*p0);
+    end
+end
+
+Qb = x1 + b;
+Qc = x1^2 + x1*b + c;
+Qd = 1/x1;
+
+temp = cubic([1, Qb, Qc, Qd]);
+x2 = temp(1);
+x3 = temp(2);
+x4 = temp(3);
+
+rts = [x1, x2, x3, x4].';
 
 end
 
@@ -147,7 +188,7 @@ else
                     x1 = Newton(C, 1.1*Db + 0.01);
                 else
                     x1 = Newton(C, 0.9*Db);
-                end 
+                end
             end
         end
     end

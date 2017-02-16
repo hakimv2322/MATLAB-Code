@@ -8,23 +8,19 @@ function relErrors = tests(C)
 % (Rel. Error) = |exp - theor|/|theor|
 
 format long
-theor = sort(roots(C));
-exp = sort(quartic24269728(C));
+theor = roots([1, C(1), C(2), C(3), -1]);
+%Alter the line above to test the local cubic function.
+exp = quartic24269728(C);
 leng = length(theor);
-if (imag(theor(leng-1)) > 0)
-    temp = theor(leng-1);
-    theor(leng-1) = theor(leng);
-    theor(leng) = temp;
-end
-if (imag(exp(leng-1)) > 0)
-    temp = exp(leng-1);
-    exp(leng-1) = exp(leng);
-    exp(leng) = temp;
-end
 
-for (it = 1:leng)
-    fprintf('Root %d relative error:\n', it);
-    disp(abs(exp(it) - theor(it))/abs(theor(it)));
+for (it1 = 1:leng)
+    temp = zeros(1, leng);
+    for (it2 = 1:leng)
+        temp(it2) = abs(exp(it1) - theor(it2))/abs(theor(it2));
+    end
+    error = min(temp);
+    fprintf('Root %d relative error:\n', it1);
+    disp(error);
 end
 
 end
