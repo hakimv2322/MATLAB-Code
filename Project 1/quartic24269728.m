@@ -1,35 +1,87 @@
 function rts = quartic24269728(C)
 
-% This function solves for all complex roots of
+% This function solves for all complex rts of
 % the quartic:
-% x^4 + a*x^3 + b*x^2 + c*x - 1 = 0
-% (notice this polynomial always has a root)
+% x^4 + b*x^3 + c*x^2 + d*x - 1 = 0
+% (notice this polynomial always has a rt)
 %
-% The input vector is C = [a, b, c], where
-% a, b, c are all real coefficients.
+% The input vector is C = [b, c, d], where
+% b, c, d are all real coefficients.
 %
-% Roots of multiplicity m are in the output m times.
+% rts of multiplicity m are in the output m times.
 %
 % The strategy is to use Newton's Method starting
 % at the "edge" of the polynomial, where there
-% are no roots either to the left or to the
-% right of the starting point.
+% are no rts of the derivative either to the left
+% or to the right of the starting point.
 
 format long
-quad([1.527652, 2.221, 0.0000001])
+%rts = double(cubic(C).');
+% Use the above to test the local function cubic()
+
+b = double(C(1)); c = double(C(2)); d = double(C(3));
+derivRts = cubic([]);
 
 end
 
+function rt = Newton(F, p0)
+% This function is Newton's Method,
+% for polynomials. Output is the single
+% resulting real rt.
+%
+% p0 is the starting point, a real number.
+% F is a vector of coefficients; the first
+% entry is for the highest degree term.
+
+counter = 0;
+
+syms x;
+f = poly2sym(F, x);
+Df = diff(f);
+p = p0;
+relError = 1.0;
+
+while (relError >= 10^-20)
+    counter = counter + 1;
+% Uncomment the line below to see each iteration.
+%    disp(counter);
+    if (counter > 10^6)
+        disp('Too many iterations--terminated.')
+        disp(double(p));
+        break
+    end
+    
+    temp = p;
+    x = p;
+    if (subs(Df) == 0)
+        disp('Attempted a divide by zero.')
+        disp(double(p));
+        break
+    end
+    p = p - (subs(f))/(subs(Df));
+    p = round(double(p), 24, 'significant');
+    relError = abs(temp - p)/abs(p);
+end
+
+%disp(counter);
+% Uncomment the line above to see how many iterations
+% were used in this Newton's Method.
+
+rt = p;
+
+end
+
+
 function rts = quad(C)
-% This solves for the complex roots of
+% This solves for the complex rts of
 % the quadratic
 % a*x^2 + b*x + c = 0
 %
 % The input vector is C = [a, b, c], where
 % a, b, c are all real coefficients. a is nonzero.
-% Double roots are output twice.
+% double rts are output twice.
 
-a = C(1); b = C(2); c = C(3);
+a = double(C(1)); b = double(C(2)); c = double(C(3));
 delta = sqrt(b^2 - 4*a*c);
 if (b >= 0)
     x1 = (-b - delta)/(2*a);
@@ -41,5 +93,78 @@ else
     rts = [x1, x2];
 
 end
+end
+
+function rts = cubic(C)
+% This solves for all complex rts of the cubic
+% a*x^3 + b*x^2 + c*x + d = 0
+%
+% The input vector is C = [a, b, c, d], where
+% a, b, c, d are all real coefficients. a is nonzero.
+% double rts are output twice.
+
+a = double(C(1)); b = double(C(2));
+c = double(C(3)); d = double(C(4));
+derivRts = quad([3*a, 2*b, c]);
+if (imag(derivRts(1)) ~= 0)
+    x1 = Newton(C, 0.0);
+else
+    if (derivRts(1) == derivRts(2))
+        Da = derivRts(1);
+        if (Da*a >= 0)
+            if (Da <= 0)
+                x1 = Newton(C, 1.1*Da - 0.01);
+            else
+                x1 = Newton(C, 0.9*Da);
+            end
+        else
+            if (Da >= 0)
+                x1 = Newton(C, 1.1*Da + 0.01);
+            else
+                x1 = Newton(C, 0.9*Da);
+            end
+        end
+    else
+        derivRts = sort(derivRts);
+        Da = derivRts(1); Db = derivRts(2);
+        fOfDa = a*Da^3 + b*Da^2 + c*Da + d;
+        fOfDb = a*Db^3 + b*Db^2 + c*Db + d;
+        if (fOfDa*fOfDb <= 0)
+            if (Da <= 0)
+                x1 = Newton(C, 1.1*Da - 0.01);
+            else
+                x1 = Newton(C, 0.9*Da);
+            end
+        else
+            if (fOfDa*a > 0)
+                if (Da <= 0)
+                    x1 = Newton(C, 1.1*Da - 0.01);
+                else
+                    x1 = Newton(C, 0.9*Da);
+                end
+            else
+                if (Db >= 0)
+                    x1 = Newton(C, 1.1*Db + 0.01);
+                else
+                    x1 = Newton(C, 0.9*Db);
+                end 
+            end
+        end
+    end
+end
+
+if (x1 == 0)
+    Qa = a; Qb = b; Qc = c;
+else
+    Qa = a;
+    Qb = -(d + x1*c)/(x1^2);
+    Qc = -d/x1;
+end
+temp = quad([Qa, Qb, Qc]);
+x2 = temp(1);
+x3 = temp(2);
+
+rts = [x1, x2, x3];
+
 end
 
